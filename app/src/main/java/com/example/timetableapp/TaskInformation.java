@@ -6,19 +6,21 @@ import android.os.Parcelable;
 import com.example.timetableapp.databinding.ActivityOverviewBinding;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 
 public class TaskInformation implements TaskInformation_interface, Parcelable {
 
     private static ActivityOverviewBinding binding;
-    private static LocalDate earliestDate;
-    private static LocalDate latestDate;
+
 
     //DATA
     private String taskName = "";
     private String startTime = "";
     private String endTime = "";
-    private String date = "";
+    private String dateText = "";
     private String details = "";
+
+    private LocalDate date;
 
 
     public TaskInformation() {    }
@@ -28,25 +30,20 @@ public class TaskInformation implements TaskInformation_interface, Parcelable {
         binding.taskNameEditText.setText(taskName);
         binding.startTimeEditText.setText(startTime);
         binding.endTimeEditText.setText(endTime);
-        binding.dateEditText.setText(date);
+        binding.dateEditText.setText(dateText);
         binding.detailsEditText.setText(details);
     }
     public void retrieveTaskInformation() {
         taskName = binding.taskNameEditText.getText().toString();
         startTime = binding.startTimeEditText.getText().toString();
         endTime = binding.endTimeEditText.getText().toString();
-        date = binding.dateEditText.getText().toString();
+        dateText = binding.dateEditText.getText().toString();
         details = binding.detailsEditText.getText().toString();
     }
 
     //SETTERS
-
-    public static void setEarliestDate(LocalDate earliestDate) {
-            TaskInformation.earliestDate = earliestDate;
-    }
-
-    public static void setLatestDate(LocalDate latestDate) {
-        TaskInformation.latestDate = latestDate;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public void setBinding(ActivityOverviewBinding binding) {
@@ -68,8 +65,8 @@ public class TaskInformation implements TaskInformation_interface, Parcelable {
     }
 
     @Override
-    public void setDate(String date) {
-        this.date = date;
+    public void setDateText(String dateText) {
+this.dateText = dateText;
     }
 
     @Override
@@ -78,12 +75,9 @@ public class TaskInformation implements TaskInformation_interface, Parcelable {
     }
 
     //GETTERS
-    public static LocalDate getEarliestDate() {
-        return earliestDate;
-    }
-
-    public static LocalDate getLatestDate() {
-        return latestDate;
+    public LocalDate getDate() {
+        this.date = LocalDate.parse(dateText, Constants.FORMATTER);
+        return date;
     }
 
     @Override
@@ -102,8 +96,8 @@ public class TaskInformation implements TaskInformation_interface, Parcelable {
     }
 
     @Override
-    public String getDate() {
-        return date;
+    public String getDateText() {
+        return dateText;
     }
 
     @Override
@@ -154,13 +148,28 @@ public class TaskInformation implements TaskInformation_interface, Parcelable {
         binding.detailsEditText.setText("");
     }
 
+//STATIC METHODS
+
+    public static Boolean compareObjects(TaskInformation a, TaskInformation b){
+        int comparison =  Comparator.comparing(TaskInformation::getTaskName)
+                .thenComparing(TaskInformation::getStartTime)
+                .thenComparing(TaskInformation::getEndTime)
+                .thenComparing(TaskInformation::getDateText)
+                .thenComparing(TaskInformation::getDetails)
+                .compare(a, b);
+        if (comparison == 0) {return true;}
+        else {return false;}
+    }
+
+
+
 // PARCELABLE --------------------------------------------------------------------------------------
 
     protected TaskInformation(Parcel in) {
         taskName = in.readString();
         startTime = in.readString();
         endTime = in.readString();
-        date = in.readString();
+        dateText = in.readString();
         details = in.readString();
     }
 
@@ -186,7 +195,7 @@ public class TaskInformation implements TaskInformation_interface, Parcelable {
         dest.writeString(taskName);
         dest.writeString(startTime);
         dest.writeString(endTime);
-        dest.writeString(date);
+        dest.writeString(dateText);
         dest.writeString(details);
     }
 }

@@ -12,16 +12,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 
 import com.example.timetableapp.databinding.ActivityMainBinding;
 import com.example.timetableapp.databinding.ActivityOverviewBinding;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements Main_Interface {
@@ -31,10 +27,6 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
     public Task_RecyclerViewAdapter task_RecyclerViewAdapter;
     public int currentTaskPosition;
-
-    public ArrayList<TaskInformation> taskInformation_List = new ArrayList<>(32);
-    public ArrayList<TaskInformation> recyclerView_information = new ArrayList<>();
-    public ArrayList<ArrayList<TaskInformation>> memory = new ArrayList<>(1024);
 
     public LocalDate currentDate;
     public LocalDate displayDate;
@@ -46,10 +38,12 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         overviewBinding = ActivityOverviewBinding.inflate(getLayoutInflater());
         ConstraintLayout viewRoot = binding.getRoot();
         setContentView(viewRoot);
+        setTitle("Calendar");
 
         mainContext = this;
         TaskInformation taskInformation = new TaskInformation();
         taskInformation.setBinding(overviewBinding);
+        TaskMemory.setBINDING(binding);
 
         //MAIN
 
@@ -59,53 +53,10 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         currentDate = LocalDate.now();
         displayDate = currentDate;
 
-        formatDateDisplay(displayDate,0);
-        if (memory.isEmpty()) {
-            TaskInformation.setEarliestDate(displayDate);
-            TaskInformation.setLatestDate(displayDate);
-            memory.add(taskInformation_List);
-        }
-
-        // PREVIOUS WEEK
-        binding.previousButton.setOnClickListener(v -> {
-            displayDate = formatDateDisplay(displayDate,-1);
-
-            //CHECK IF NEW DATE
-            if (displayDate.isBefore(TaskInformation.getEarliestDate())) {
-                ArrayList<TaskInformation> newTaskInformation_List = new ArrayList<>(32);
-                memory.add(0, newTaskInformation_List);
-                taskInformation_List = newTaskInformation_List;
-                TaskInformation.setEarliestDate(displayDate);
-            } else { // LOAD DATE FROM MEMORY
-                //get location
-                int currentDatePos = displayDate.compareTo(TaskInformation.getEarliestDate());
-                taskInformation_List = memory.get(currentDatePos);
-                //update recycler view
-            }
-            updateRecyclerViewAdapter(taskInformation_List);
-        });
-
-        // NEXT WEEK
-        binding.nextButton.setOnClickListener(v -> {
-            displayDate = formatDateDisplay(displayDate,1);
-
-            //CHECK IF NEW DATE
-            if (displayDate.isAfter(TaskInformation.getLatestDate())) {
-                ArrayList<TaskInformation> newTaskInformation_List = new ArrayList<>(32);
-                memory.add(newTaskInformation_List);
-                taskInformation_List = newTaskInformation_List;
-                TaskInformation.setLatestDate(displayDate);
-
-            } else { // LOAD DATE FROM MEMORY
-                //get location
-                int currentDatePos = displayDate.compareTo(TaskInformation.getEarliestDate());
-                taskInformation_List = memory.get(currentDatePos);
-            }
-            updateRecyclerViewAdapter(taskInformation_List);
-        });
-
-        // LOAD FROM MEMORY
-
+        // SET DATE
+        TaskMemory.setDisplayDate(displayDate);
+        set_PreviousButton_OnClickListener();
+        set_NextButton_OnClickListener();
 
         // CREATE NEW TASK
         create_taskGui();
@@ -113,30 +64,38 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         delete_task();
         edit_task();
 
-        set_taskGuiPosition(taskInformation_List);
+        set_taskGuiPosition(TaskMemory.getTASK_LIST());
 
         //ADDONS
 
     }
 
-
-
-    private LocalDate formatDateDisplay(LocalDate displayDate, int addDay) {
-
-        displayDate = displayDate.plusDays(addDay);
-        String displayDateText = displayDate.getDayOfWeek().toString() + "\n" + displayDate.format(Constants.FORMATTER);
-        binding.currentDateTextView.setText(displayDateText);
-        return displayDate;
+    public void set_PreviousButton_OnClickListener() {
+        // PREVIOUS DATE
+        binding.previousButton.setOnClickListener(v -> {
+            int subtractDay = -1;
+           updateDate(subtractDay);
+        });
+    }
+    public void set_NextButton_OnClickListener() {
+        // NEXT DATE
+        binding.nextButton.setOnClickListener(v -> {
+            int addDay = 1;
+            updateDate(addDay);
+        });
     }
 
-    public void loadDate() {
-
+    public void updateDate(int addDay) {
+        displayDate = TaskMemory.changeDisplayDate(displayDate, addDay);
+        int MEMORY_index = TaskMemory.getMEMORY_INDEX(displayDate);
+        TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(MEMORY_index));
+        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
     }
 
     @Override
     public void create_taskGui() {
-        recyclerView_information.addAll(taskInformation_List);
-        task_RecyclerViewAdapter = new Task_RecyclerViewAdapter(mainContext, recyclerView_information);
+        TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
+        task_RecyclerViewAdapter = new Task_RecyclerViewAdapter(mainContext, TaskMemory.getRECYCLERVIEW_LIST());
         binding.taskRecyclerView.setAdapter(task_RecyclerViewAdapter);
         binding.taskRecyclerView.setLayoutManager(new LinearLayoutManager(mainContext));
     }
@@ -154,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 Intent intent = new Intent(mainContext, OverviewActivity.class);
                 intent.putExtra(Constants.ADD_OR_EDIT_KEY, Constants.ADD);
                 TaskInformation taskInformation = new TaskInformation();
-                taskInformation.setDate(displayDate.format(Constants.FORMATTER));
+                taskInformation.setDateText(displayDate.format(Constants.FORMATTER));
                 intent.putExtra(Constants.OVERVIEW_INFO_KEY, taskInformation);
                 startActivityForResult(intent, request_Code);
             }
@@ -165,33 +124,18 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
 
     @Override
-    public void set_taskGuiPosition(List<TaskInformation> taskInformation_List){
+    public void set_taskGuiPosition(ArrayList<TaskInformation> taskInformation_List){
         //SORT LIST
-        Comparator<TaskInformation> taskInformation_sortByStartTime_Comparator = new Comparator<TaskInformation>() {
-            @Override
-            public int compare(TaskInformation o1, TaskInformation o2) {
-                if (timeString_toInt(o1.getStartTime()) > timeString_toInt(o2.getStartTime())) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            }
-            private int timeString_toInt(String input) {
-                String militaryTime = String.format("%s%s", input.substring(0,2), input.substring(3,5));
-                int intValue = Integer.parseInt(militaryTime);
-                return intValue;
-            }
-        };
-        Collections.sort(taskInformation_List, taskInformation_sortByStartTime_Comparator);
+        taskInformation_List = TaskMemory.sort_taskList(taskInformation_List);
         //UPDATE LIST
         updateRecyclerViewAdapter(taskInformation_List);
     }
 
     public void updateRecyclerViewAdapter(List<TaskInformation> taskInformation_List) {
-        recyclerView_information.clear();
+        TaskMemory.getRECYCLERVIEW_LIST().clear();
         task_RecyclerViewAdapter.notifyDataSetChanged();
-        recyclerView_information.addAll(taskInformation_List);
-        task_RecyclerViewAdapter.notifyItemRangeInserted(0,recyclerView_information.size());
+        TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
+        task_RecyclerViewAdapter.notifyItemRangeInserted(0,TaskMemory.getRECYCLERVIEW_LIST().size());
     }
 
     //EDIT TASK
@@ -207,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
             }
             public void open_activity_overview(int request_Code) {
                 Intent intent = new Intent(mainContext, OverviewActivity.class);
-                TaskInformation taskInformation = taskInformation_List.get(currentTaskPosition);
+                TaskInformation taskInformation = TaskMemory.getTASK_LIST().get(currentTaskPosition);
                 intent.putExtra(Constants.OVERVIEW_INFO_KEY, taskInformation);
                 intent.putExtra(Constants.ADD_OR_EDIT_KEY, Constants.EDIT);
                 startActivityForResult(intent, request_Code);
@@ -225,17 +169,18 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 //REMOVE ITEM
-                taskInformation_List.remove(viewHolder.getAdapterPosition());
-                recyclerView_information.clear();
+                int positionStart = 0;
+                TaskMemory.getTASK_LIST().remove(viewHolder.getAdapterPosition());
+                TaskMemory.getRECYCLERVIEW_LIST().clear();
                 task_RecyclerViewAdapter.notifyDataSetChanged();
-                recyclerView_information.addAll(taskInformation_List);
-                task_RecyclerViewAdapter.notifyItemRangeInserted(0,recyclerView_information.size());
+                TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
+                task_RecyclerViewAdapter.notifyItemRangeInserted(positionStart,TaskMemory.getRECYCLERVIEW_LIST().size());
             }
         };
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.taskRecyclerView);
     }
 
-    //TASK CLICK LISTENER --> OVERVIEW
+    //OVERVIEW --> ON ACTIVITY RESULT
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -244,59 +189,27 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
             case Constants.ADD_REQUEST_CODE: {
                 if (resultCode == RESULT_OK) {
                     assert data != null;
-                    TaskInformation taskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
-                    taskInformation_List.add(taskInformation);
-                    set_taskGuiPosition(taskInformation_List);
-                    // WHAT IF THE DATE IS CHANGED???!?????????????????????????????????????????
+                    TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
+                    TaskMemory.add_dateOutOfBounds(newTaskInformation.getDate());
+                    addMemory(newTaskInformation);
                 }
                 break;
             }
             case Constants.EDIT_REQUEST_CODE: {
                 if (resultCode == RESULT_OK) {
                     assert data != null;
-                    TaskInformation oldTaskInformation = taskInformation_List.get(currentTaskPosition);
+                    TaskInformation oldTaskInformation = TaskMemory.getTASK_LIST().get(currentTaskPosition);
                     TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
                     //CHECK IF DATE CHANGED
-                    if (oldTaskInformation.getDate() != newTaskInformation.getDate()) {
-                        //add day
-                        LocalDate newDate = LocalDate.parse(newTaskInformation.getDate(), Constants.FORMATTER);
-                        int newDayPos = newDate.compareTo(TaskInformation.getEarliestDate());
-                        if(newDayPos >= (memory.size()-1)) {
-                            int extraPositiveElements = newDayPos -(memory.size()-1);
-                            for (int i = 0; i < extraPositiveElements; i++) {
-                                ArrayList<TaskInformation> newTaskInformation_List = new ArrayList<>(32);
-                                memory.add(newTaskInformation_List);
-                            }
-                        } else if (newDayPos < 0){
-                            int extraNegativeElements = - newDayPos;
-                            for (int i = 0; i <= extraNegativeElements; i++) {
-                                ArrayList<TaskInformation> newTaskInformation_List = new ArrayList<>(32);
-                                memory.add(0, newTaskInformation_List);
-                            }
-                            newDayPos = 0;
-                        }
-
-                        //add task
-                        ArrayList<TaskInformation> newTaskInformation_list = memory.get(newDayPos);
-                        set_taskGuiPosition(newTaskInformation_list);
-                        memory.get(newDayPos).add(newTaskInformation);
-
-                        //delete task from memory
-                        LocalDate oldDate = LocalDate.parse(oldTaskInformation.getDate(), Constants.FORMATTER);
-                        int oldDayPos = oldDate.compareTo(TaskInformation.getEarliestDate());
-                        memory.get(oldDayPos).remove(oldTaskInformation);
-
-                        //UPDATE LIST
-                        int dateChange = newDate.compareTo(displayDate);
-                        displayDate = formatDateDisplay(displayDate, dateChange);
-                        taskInformation_List = memory.get(newDayPos);
-                        updateRecyclerViewAdapter(taskInformation_List);
-                        //set new taskInformation_List
+                    Boolean dateChanged = !oldTaskInformation.getDateText().equals(newTaskInformation.getDateText());
+                    if (dateChanged) {
+                        TaskMemory.add_dateOutOfBounds(newTaskInformation.getDate());
+                        addMemory(newTaskInformation);
+                        TaskMemory.delete_taskFromMemory(oldTaskInformation);
                     } else {
-                        //CHECK IF OTHER INFO CHANGED
-                        if (!compareObjects(oldTaskInformation, newTaskInformation)) {
-                            taskInformation_List.set(currentTaskPosition,newTaskInformation);
-                            set_taskGuiPosition(taskInformation_List);
+                        Boolean taskInformationChanged = !TaskInformation.compareObjects(oldTaskInformation, newTaskInformation);
+                        if (taskInformationChanged) {
+                            addMemory(newTaskInformation);
                         }
                     }
                 }
@@ -305,39 +218,13 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         }
     }
 
-    public static Boolean compareObjects(TaskInformation a, TaskInformation b){
-        int comparison =  Comparator.comparing(TaskInformation::getTaskName)
-                .thenComparing(TaskInformation::getStartTime)
-                .thenComparing(TaskInformation::getEndTime)
-                .thenComparing(TaskInformation::getDate)
-                .thenComparing(TaskInformation::getDetails)
-                .compare(a, b);
-        if (comparison == 0) {return true;}
-        else {return false;}
+    private void addMemory(TaskInformation newTaskInformation) {
+        TaskMemory.add_taskToMemory(newTaskInformation);
+        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
+        displayDate = TaskMemory.changeDisplayDate(newTaskInformation.getDate(),0);
     }
 
-    public void changeDate(int addDay) {
-        displayDate = formatDateDisplay(displayDate,addDay);
-        //CHECK IF NEW DATE
-        LocalDate newDate = LocalDate.parse(newTaskInformation.getDate(), Constants.FORMATTER);
-        int newDayPos = newDate.compareTo(TaskInformation.getEarliestDate());
-        if(newDayPos >= (memory.size()-1)) {
-            int extraPositiveElements = newDayPos -(memory.size()-1);
-            for (int i = 0; i < extraPositiveElements; i++) {
-                ArrayList<TaskInformation> newTaskInformation_List = new ArrayList<>(32);
-                memory.add(newTaskInformation_List);
-            }
-        } else if (newDayPos < 0){
-            int extraNegativeElements = - newDayPos;
-            for (int i = 0; i <= extraNegativeElements; i++) {
-                ArrayList<TaskInformation> newTaskInformation_List = new ArrayList<>(32);
-                memory.add(0, newTaskInformation_List);
-            }
-            newDayPos = 0;
-        }
-        updateRecyclerViewAdapter(taskInformation_List);
 
-    }
 }
 
 
