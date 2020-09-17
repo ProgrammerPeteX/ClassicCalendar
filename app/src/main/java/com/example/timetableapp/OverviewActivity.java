@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.view.View;
 import android.widget.TextView;
 
@@ -72,7 +73,7 @@ public class OverviewActivity extends AppCompatActivity implements Overview_Inte
 
                 if (isTimeOK) {
                     Intent resultIntent = new Intent();
-                    resultIntent.putExtra(Constants.OVERVIEW_INFO_KEY, taskInformation);
+                    resultIntent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
                     setResult(RESULT_OK, resultIntent);
                     finish();
                 }
@@ -137,7 +138,7 @@ public class OverviewActivity extends AppCompatActivity implements Overview_Inte
                 taskInformation.retrieveTaskInformation();
 
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra(Constants.OVERVIEW_INFO_KEY, taskInformation);
+                resultIntent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
                 setResult(RESULT_OK, resultIntent);
                 finish();
             }

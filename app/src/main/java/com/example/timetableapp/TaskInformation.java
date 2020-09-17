@@ -5,10 +5,11 @@ import android.os.Parcelable;
 
 import com.example.timetableapp.databinding.ActivityOverviewBinding;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Comparator;
 
-public class TaskInformation implements TaskInformation_interface, Parcelable {
+public class TaskInformation implements TaskInformation_interface, Parcelable, Serializable {
 
     private static ActivityOverviewBinding binding;
 

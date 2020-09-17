@@ -11,11 +11,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.View;
 
 import com.example.timetableapp.databinding.ActivityMainBinding;
 import com.example.timetableapp.databinding.ActivityOverviewBinding;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,25 +49,35 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         TaskMemory.setBINDING(binding);
 
         //MAIN
-
-        // SET SCREEN PARAMS
-
-        // SET MEMORY
         currentDate = LocalDate.now();
         displayDate = currentDate;
 
-        // SET DATE
-        TaskMemory.setDisplayDate(displayDate);
+        // CREATE GUI
+        create_taskGui();
+        set_taskGuiPosition(TaskMemory.getTASK_LIST());
+
+        // SET MEMORY
+        TaskMemory.load_memoryFromFile(mainContext);
+
+        if (TaskMemory.getMEMORY().isEmpty()) {
+            TaskMemory.setDisplayDate(displayDate);
+        } else {
+            int addDay = 0;
+            TaskMemory.setDateDisplay(currentDate,addDay);
+        }
+
+        currentTaskPosition = TaskMemory.getMEMORY_INDEX(currentDate);
+        TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(currentTaskPosition));
+        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
+
+        //SET BUTTONS
         set_PreviousButton_OnClickListener();
         set_NextButton_OnClickListener();
-
-        // CREATE NEW TASK
-        create_taskGui();
         add_taskListener();
         delete_task();
         edit_task();
 
-        set_taskGuiPosition(TaskMemory.getTASK_LIST());
+
 
         //ADDONS
 
@@ -114,14 +127,12 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 intent.putExtra(Constants.ADD_OR_EDIT_KEY, Constants.ADD);
                 TaskInformation taskInformation = new TaskInformation();
                 taskInformation.setDateText(displayDate.format(Constants.FORMATTER));
-                intent.putExtra(Constants.OVERVIEW_INFO_KEY, taskInformation);
+                intent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
                 startActivityForResult(intent, request_Code);
             }
 
         });
     }
-
-
 
     @Override
     public void set_taskGuiPosition(ArrayList<TaskInformation> taskInformation_List){
@@ -152,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
             public void open_activity_overview(int request_Code) {
                 Intent intent = new Intent(mainContext, OverviewActivity.class);
                 TaskInformation taskInformation = TaskMemory.getTASK_LIST().get(currentTaskPosition);
-                intent.putExtra(Constants.OVERVIEW_INFO_KEY, taskInformation);
+                intent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
                 intent.putExtra(Constants.ADD_OR_EDIT_KEY, Constants.EDIT);
                 startActivityForResult(intent, request_Code);
             }
@@ -175,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 task_RecyclerViewAdapter.notifyDataSetChanged();
                 TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
                 task_RecyclerViewAdapter.notifyItemRangeInserted(positionStart,TaskMemory.getRECYCLERVIEW_LIST().size());
+                TaskMemory.save_memoryToFile(mainContext);
             }
         };
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.taskRecyclerView);
@@ -190,8 +202,8 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 if (resultCode == RESULT_OK) {
                     assert data != null;
                     TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
-                    TaskMemory.add_dateOutOfBounds(newTaskInformation.getDate());
-                    addMemory(newTaskInformation);
+                    assert newTaskInformation != null;
+                    updateTask(newTaskInformation, null);
                 }
                 break;
             }
@@ -201,15 +213,14 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                     TaskInformation oldTaskInformation = TaskMemory.getTASK_LIST().get(currentTaskPosition);
                     TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
                     //CHECK IF DATE CHANGED
-                    Boolean dateChanged = !oldTaskInformation.getDateText().equals(newTaskInformation.getDateText());
+                    assert newTaskInformation != null;
+                    boolean dateChanged = !oldTaskInformation.getDateText().equals(newTaskInformation.getDateText());
                     if (dateChanged) {
-                        TaskMemory.add_dateOutOfBounds(newTaskInformation.getDate());
-                        addMemory(newTaskInformation);
-                        TaskMemory.delete_taskFromMemory(oldTaskInformation);
+                        updateTask(newTaskInformation, oldTaskInformation);
                     } else {
-                        Boolean taskInformationChanged = !TaskInformation.compareObjects(oldTaskInformation, newTaskInformation);
+                        boolean taskInformationChanged = !TaskInformation.compareObjects(oldTaskInformation, newTaskInformation);
                         if (taskInformationChanged) {
-                            addMemory(newTaskInformation);
+                            updateTask(newTaskInformation, oldTaskInformation);
                         }
                     }
                 }
@@ -218,13 +229,18 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         }
     }
 
-    private void addMemory(TaskInformation newTaskInformation) {
+    private void updateTask(TaskInformation newTaskInformation, TaskInformation oldTaskInformation){
+        TaskMemory.add_dateOutOfBounds(newTaskInformation.getDate());
         TaskMemory.add_taskToMemory(newTaskInformation);
-        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
+        TaskMemory.delete_taskFromMemory(oldTaskInformation);
         displayDate = TaskMemory.changeDisplayDate(newTaskInformation.getDate(),0);
+        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
+        TaskMemory.save_memoryToFile(mainContext);
     }
 
+    private void deleteTask(TaskInformation oldTaskInformation) {
 
+    }
 }
 
 
