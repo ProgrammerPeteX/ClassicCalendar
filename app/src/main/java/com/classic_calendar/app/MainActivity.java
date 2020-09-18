@@ -4,21 +4,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
-import android.widget.Toast;
 
 import com.classic_calendar.app.databinding.ActivityMainBinding;
 import com.classic_calendar.app.databinding.ActivityOverviewBinding;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +31,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements Main_Interface {
     public Context mainContext;
+    public Activity mainActivity;
     public ActivityMainBinding binding;
     public ActivityOverviewBinding overviewBinding;
 
@@ -43,10 +47,13 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         overviewBinding = ActivityOverviewBinding.inflate(getLayoutInflater());
         ConstraintLayout viewRoot = binding.getRoot();
+        mainActivity = this;
+        mainContext = this;
+        getPermissions(mainContext,mainActivity);
         setContentView(viewRoot);
         setTitle("Calendar");
 
-        mainContext = this;
+
         TaskInformation taskInformation = new TaskInformation();
         taskInformation.setBinding(overviewBinding);
         TaskMemory.setBINDING(binding);
@@ -86,6 +93,16 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
         //ADDONS
 
+    }
+
+    public void getPermissions(Context mainContext, Activity mainActivity) {
+        if (ContextCompat.checkSelfPermission(mainContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(mainActivity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        }
+
+        if (ContextCompat.checkSelfPermission(mainContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(mainActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
     }
 
     public void set_PreviousButton_OnClickListener() {
