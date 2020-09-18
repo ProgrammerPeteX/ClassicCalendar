@@ -1,4 +1,4 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,12 +13,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
+import android.widget.Toast;
 
-import com.example.timetableapp.databinding.ActivityMainBinding;
-import com.example.timetableapp.databinding.ActivityOverviewBinding;
+import com.classic_calendar.app.databinding.ActivityMainBinding;
+import com.classic_calendar.app.databinding.ActivityOverviewBinding;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,13 +60,16 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         set_taskGuiPosition(TaskMemory.getTASK_LIST());
 
         // SET MEMORY
-        TaskMemory.load_memoryFromFile(mainContext);
-
+        Path path = Paths.get(mainContext.getFilesDir() + "/" + TaskMemory.MEMORY_FILENAME);
+        Boolean memoryFileExists = Files.exists(path);
+        if (memoryFileExists) {
+            TaskMemory.load_memoryFromFile(mainContext);
+        }
         if (TaskMemory.getMEMORY().isEmpty()) {
             TaskMemory.setDisplayDate(displayDate);
         } else {
             int addDay = 0;
-            TaskMemory.setDateDisplay(currentDate,addDay);
+            TaskMemory.setDateDisplay(currentDate, addDay);
         }
 
         currentTaskPosition = TaskMemory.getMEMORY_INDEX(currentDate);
@@ -78,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         edit_task();
 
 
-
         //ADDONS
 
     }
@@ -87,9 +92,10 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         // PREVIOUS DATE
         binding.previousButton.setOnClickListener(v -> {
             int subtractDay = -1;
-           updateDate(subtractDay);
+            updateDate(subtractDay);
         });
     }
+
     public void set_NextButton_OnClickListener() {
         // NEXT DATE
         binding.nextButton.setOnClickListener(v -> {
@@ -114,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
     }
 
 
-
     @Override
     public void add_taskListener() {
         binding.addTaskButton.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
             public void onClick(View v) {
                 open_activity_overview(Constants.ADD_REQUEST_CODE);
             }
+
             public void open_activity_overview(int request_Code) {
                 Intent intent = new Intent(mainContext, OverviewActivity.class);
                 intent.putExtra(Constants.ADD_OR_EDIT_KEY, Constants.ADD);
@@ -135,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
     }
 
     @Override
-    public void set_taskGuiPosition(ArrayList<TaskInformation> taskInformation_List){
+    public void set_taskGuiPosition(ArrayList<TaskInformation> taskInformation_List) {
         //SORT LIST
         taskInformation_List = TaskMemory.sort_taskList(taskInformation_List);
         //UPDATE LIST
@@ -146,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         TaskMemory.getRECYCLERVIEW_LIST().clear();
         task_RecyclerViewAdapter.notifyDataSetChanged();
         TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
-        task_RecyclerViewAdapter.notifyItemRangeInserted(0,TaskMemory.getRECYCLERVIEW_LIST().size());
+        task_RecyclerViewAdapter.notifyItemRangeInserted(0, TaskMemory.getRECYCLERVIEW_LIST().size());
     }
 
     //EDIT TASK
@@ -160,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 currentTaskPosition = position;
                 open_activity_overview(Constants.EDIT_REQUEST_CODE);
             }
+
             public void open_activity_overview(int request_Code) {
                 Intent intent = new Intent(mainContext, OverviewActivity.class);
                 TaskInformation taskInformation = TaskMemory.getTASK_LIST().get(currentTaskPosition);
@@ -172,11 +179,12 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
     @Override
     public void delete_task() {
-        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 return false;
             }
+
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 //REMOVE ITEM
@@ -185,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 TaskMemory.getRECYCLERVIEW_LIST().clear();
                 task_RecyclerViewAdapter.notifyDataSetChanged();
                 TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
-                task_RecyclerViewAdapter.notifyItemRangeInserted(positionStart,TaskMemory.getRECYCLERVIEW_LIST().size());
+                task_RecyclerViewAdapter.notifyItemRangeInserted(positionStart, TaskMemory.getRECYCLERVIEW_LIST().size());
                 TaskMemory.save_memoryToFile(mainContext);
             }
         };
@@ -229,11 +237,11 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         }
     }
 
-    private void updateTask(TaskInformation newTaskInformation, TaskInformation oldTaskInformation){
+    private void updateTask(TaskInformation newTaskInformation, TaskInformation oldTaskInformation) {
         TaskMemory.add_dateOutOfBounds(newTaskInformation.getDate());
         TaskMemory.add_taskToMemory(newTaskInformation);
         TaskMemory.delete_taskFromMemory(oldTaskInformation);
-        displayDate = TaskMemory.changeDisplayDate(newTaskInformation.getDate(),0);
+        displayDate = TaskMemory.changeDisplayDate(newTaskInformation.getDate(), 0);
         updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
         TaskMemory.save_memoryToFile(mainContext);
     }

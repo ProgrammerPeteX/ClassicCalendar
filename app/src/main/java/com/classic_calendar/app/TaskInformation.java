@@ -1,9 +1,9 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.example.timetableapp.databinding.ActivityOverviewBinding;
+import com.classic_calendar.app.databinding.ActivityOverviewBinding;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -24,7 +24,8 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
     private LocalDate date;
 
 
-    public TaskInformation() {    }
+    public TaskInformation() {
+    }
 
     //METHODS
     public void setTaskInformation() {
@@ -34,6 +35,7 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
         binding.dateEditText.setText(dateText);
         binding.detailsEditText.setText(details);
     }
+
     public void retrieveTaskInformation() {
         taskName = binding.taskNameEditText.getText().toString();
         startTime = binding.startTimeEditText.getText().toString();
@@ -67,7 +69,7 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
 
     @Override
     public void setDateText(String dateText) {
-this.dateText = dateText;
+        this.dateText = dateText;
     }
 
     @Override
@@ -109,7 +111,7 @@ this.dateText = dateText;
     //OTHER METHODS
     private int getHour(String time) {
         int colonPos = time.indexOf(':');
-        return Integer.parseInt(time.substring(0,colonPos));
+        return Integer.parseInt(time.substring(0, colonPos));
     }
 
     private int getMinute(String time) {
@@ -138,7 +140,7 @@ this.dateText = dateText;
     }
 
     public int getEndTimeInMinutes() {
-        return getEndHour()*60 + getEndMinute();
+        return getEndHour() * 60 + getEndMinute();
     }
 
     public void clearOverview() {
@@ -151,17 +153,19 @@ this.dateText = dateText;
 
 //STATIC METHODS
 
-    public static Boolean compareObjects(TaskInformation a, TaskInformation b){
-        int comparison =  Comparator.comparing(TaskInformation::getTaskName)
+    public static Boolean compareObjects(TaskInformation a, TaskInformation b) {
+        int comparison = Comparator.comparing(TaskInformation::getTaskName)
                 .thenComparing(TaskInformation::getStartTime)
                 .thenComparing(TaskInformation::getEndTime)
                 .thenComparing(TaskInformation::getDateText)
                 .thenComparing(TaskInformation::getDetails)
                 .compare(a, b);
-        if (comparison == 0) {return true;}
-        else {return false;}
+        if (comparison == 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
-
 
 
 // PARCELABLE --------------------------------------------------------------------------------------

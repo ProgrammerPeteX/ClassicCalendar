@@ -1,18 +1,15 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
 import android.content.Context;
 import android.widget.Toast;
 
-import com.example.timetableapp.databinding.ActivityMainBinding;
+import com.classic_calendar.app.databinding.ActivityMainBinding;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -29,16 +26,17 @@ public class TaskMemory implements Serializable {
     private static ArrayList<TaskInformation> TASK_LIST = new ArrayList<>(32);
     private static ArrayList<TaskInformation> RECYCLERVIEW_LIST = new ArrayList<>(32);
     private static ActivityMainBinding BINDING;
-    private static final String MEMORY_FILENAME = "MEMORY.txt";
-    private static final String EARLIEST_DATE_FILENAME = "EARLIEST_DATE.txt";
-    private static final String LATEST_DATE_FILENAME = "LATEST_DATE.txt";
+    public static final String MEMORY_FILENAME = "MEMORY.txt";
+    public static final String EARLIEST_DATE_FILENAME = "EARLIEST_DATE.txt";
+    public static final String LATEST_DATE_FILENAME = "LATEST_DATE.txt";
 
     //VARS
     private static LocalDate earliestDate;
     private static LocalDate latestDate;
 
     //CONSTRUCTOR
-    TaskMemory() {}
+    TaskMemory() {
+    }
 
     //SETTERS
     public static void setTASK_LIST(ArrayList<TaskInformation> taskList) {
@@ -131,12 +129,12 @@ public class TaskMemory implements Serializable {
     }
 
     public static LocalDate stringToDate(String dateText) {
-        return LocalDate.parse(dateText,Constants.FORMATTER);
+        return LocalDate.parse(dateText, Constants.FORMATTER);
     }
 
-    public static void add_dateOutOfBounds(LocalDate newDate)  {
+    public static void add_dateOutOfBounds(LocalDate newDate) {
         int newDayPos = newDate.compareTo(getEarliestDate());
-        boolean positiveOutOfBounds = getDateDifference(newDate,getLatestDate()) > 0;
+        boolean positiveOutOfBounds = getDateDifference(newDate, getLatestDate()) > 0;
         boolean negativeOutOfBounds = getDateDifference(newDate, getEarliestDate()) < 0;
         if (positiveOutOfBounds) {
             int extraPositiveElements = newDayPos - (MEMORY.size() - 1);
@@ -161,7 +159,8 @@ public class TaskMemory implements Serializable {
         TASK_LIST.add(newTaskInformation);
         setTASK_LIST(sort_taskList(TASK_LIST));
 
-}
+    }
+
     public static ArrayList<TaskInformation> sort_taskList(ArrayList<TaskInformation> taskList) {
         //SORT LIST
         Comparator<TaskInformation> taskInformation_sortByStartTime_Comparator = new Comparator<TaskInformation>() {
@@ -169,8 +168,9 @@ public class TaskMemory implements Serializable {
             public int compare(TaskInformation o1, TaskInformation o2) {
                 return Integer.compare(timeString_toInt(o1.getStartTime()), timeString_toInt(o2.getStartTime()));
             }
+
             private int timeString_toInt(String input) {
-                String militaryTime = String.format("%s%s", input.substring(0,2), input.substring(3,5));
+                String militaryTime = String.format("%s%s", input.substring(0, 2), input.substring(3, 5));
                 return Integer.parseInt(militaryTime);
             }
         };
@@ -194,7 +194,7 @@ public class TaskMemory implements Serializable {
     }
 
     public static void load_memoryFromFile(Context context) {
-        ArrayList<ArrayList<TaskInformation>> MEMORY = (ArrayList<ArrayList<TaskInformation>>) loadObject(context,MEMORY_FILENAME);
+        ArrayList<ArrayList<TaskInformation>> MEMORY = (ArrayList<ArrayList<TaskInformation>>) loadObject(context, MEMORY_FILENAME);
         setMEMORY(MEMORY);
         LocalDate earliestDate = stringToDate(loadText(context, EARLIEST_DATE_FILENAME));
         setEarliestDate(earliestDate);
@@ -212,7 +212,8 @@ public class TaskMemory implements Serializable {
             ObjectOutputStream output = new ObjectOutputStream(fileName);
             output.writeObject(object);
             output.close();
-            Toast.makeText(context, "Saved to " + context.getFilesDir() + "/" + FILENAME, Toast.LENGTH_SHORT).show();
+            String fileLocation = context.getFilesDir() + "/" + FILENAME;
+            Toast.makeText(context,fileLocation,Toast.LENGTH_LONG);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -221,7 +222,7 @@ public class TaskMemory implements Serializable {
 
     }
 
-    private static Object loadObject(Context context, String FILENAME)  {
+    private static Object loadObject(Context context, String FILENAME) {
         File file = context.getFileStreamPath(FILENAME);
         FileInputStream is = null;
         Object object = null;
@@ -230,19 +231,18 @@ public class TaskMemory implements Serializable {
             ObjectInputStream input = new ObjectInputStream(is);
             object = (ArrayList<ArrayList<TaskInformation>>) input.readObject();
             input.close();
-            Toast.makeText(context, "LOAD SUCCESSFUL", Toast.LENGTH_SHORT).show();
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
 
         return object;
     }
+
     private static void saveText(Context context, String FILENAME, String text) {
         FileOutputStream fileOutputStream = null;
         try {
             fileOutputStream = context.openFileOutput(FILENAME, Context.MODE_PRIVATE);
             fileOutputStream.write(text.getBytes());
-        Toast.makeText(context, "Saved to " + context.getFilesDir() + "/" + FILENAME, Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -258,17 +258,16 @@ public class TaskMemory implements Serializable {
     }
 
     private static String loadText(Context context, String FILENAME) {
-       FileInputStream fileInputStream = null;
-       String inputString = null;
+        FileInputStream fileInputStream = null;
+        String inputString = null;
         try {
             fileInputStream = context.openFileInput(FILENAME);
-            InputStreamReader inputStreamReader= new InputStreamReader(fileInputStream);
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             StringBuilder stringBuilder = new StringBuilder();
             String text = bufferedReader.readLine();
             stringBuilder.append(text);
             inputString = stringBuilder.toString();
-            Toast.makeText(context, "LOAD SUCCESSFUL", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         }

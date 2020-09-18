@@ -1,4 +1,4 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -6,22 +6,16 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
 import android.os.Parcelable;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.timetableapp.databinding.ActivityOverviewBinding;
+import com.classic_calendar.app.databinding.ActivityOverviewBinding;
 import com.google.android.material.snackbar.Snackbar;
-
-import java.time.LocalDate;
-import java.util.concurrent.Delayed;
 
 public class OverviewActivity extends AppCompatActivity implements Overview_Interface {
     public ActivityOverviewBinding overviewBinding = null;
     public Intent intent;
-
 
 
     @Override
@@ -76,11 +70,11 @@ public class OverviewActivity extends AppCompatActivity implements Overview_Inte
                     resultIntent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
                     setResult(RESULT_OK, resultIntent);
                     finish();
-                }
-                else {
+                } else {
                     showSnackBar("Time error");
                 }
             }
+
             private Boolean checkTime(TaskInformation taskInformation) {
                 //check for more than 1 colon
                 int colonPos = taskInformation.getStartTime().indexOf(':');
@@ -99,11 +93,11 @@ public class OverviewActivity extends AppCompatActivity implements Overview_Inte
                 int endMinute = taskInformation.getEndMinute();
                 int endTime = taskInformation.getEndTimeInMinutes();
 
-                if((startHour < 0) | (startHour > 23) ) return false;
-                if((startMinute < 0) | (startMinute > 59) ) return false;
-                if((endHour < 0) | (endHour > 23) ) return false;
-                if((endMinute < 0) | (endMinute > 59) ) return false;
-                if(startTime > endTime) return false;
+                if ((startHour < 0) | (startHour > 23)) return false;
+                if ((startMinute < 0) | (startMinute > 59)) return false;
+                if ((endHour < 0) | (endHour > 23)) return false;
+                if ((endMinute < 0) | (endMinute > 59)) return false;
+                if (startTime > endTime) return false;
                 return true;
             }
 
@@ -118,7 +112,7 @@ public class OverviewActivity extends AppCompatActivity implements Overview_Inte
                 Snackbar snackbar = Snackbar.make(overviewBinding.overviewConstraintLayout, message, Snackbar.LENGTH_SHORT);
                 snackbar.show();
                 View snackView = snackbar.getView();
-                TextView snackbarTextView = snackView.findViewById( R.id.snackbar_text);
+                TextView snackbarTextView = snackView.findViewById(R.id.snackbar_text);
                 snackbarTextView.setTextColor(Color.RED);
             }
         });

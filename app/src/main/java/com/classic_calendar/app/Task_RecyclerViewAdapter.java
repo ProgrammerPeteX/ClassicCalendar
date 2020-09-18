@@ -1,4 +1,4 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -9,7 +9,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Task_RecyclerViewAdapter extends RecyclerView.Adapter<Task_RecyclerViewAdapter.TaskViewHolder> {
@@ -18,7 +17,7 @@ public class Task_RecyclerViewAdapter extends RecyclerView.Adapter<Task_Recycler
     List<TaskInformation> recyclerView_Information;
 
 
-    public Task_RecyclerViewAdapter (Context context, List<TaskInformation> recyclerView_Information) {
+    public Task_RecyclerViewAdapter(Context context, List<TaskInformation> recyclerView_Information) {
         this.context = context;
         this.recyclerView_Information = recyclerView_Information;
     }
@@ -27,14 +26,14 @@ public class Task_RecyclerViewAdapter extends RecyclerView.Adapter<Task_Recycler
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.recycler_view_row, parent,false);
+        View view = inflater.inflate(R.layout.recycler_view_row, parent, false);
         return new TaskViewHolder(view, onItemClickListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         holder.recyclerView_time_TextView.setText(String.format("%s - %s", recyclerView_Information.get(position).getStartTime(), recyclerView_Information.get(position).getEndTime()));
-        holder.taskName_taskName_TextView.setText(String.format("%s",recyclerView_Information.get(position).getTaskName()));
+        holder.taskName_taskName_TextView.setText(String.format("%s", recyclerView_Information.get(position).getTaskName()));
 
     }
 
@@ -66,7 +65,7 @@ public class Task_RecyclerViewAdapter extends RecyclerView.Adapter<Task_Recycler
     }
 
     //ONCLICK LISTENER
-    public interface OnItemClickListener{
+    public interface OnItemClickListener {
         void onItemClick(View view, int position);
     }
 

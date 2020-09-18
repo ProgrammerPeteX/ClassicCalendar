@@ -1,6 +1,6 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
-import com.example.timetableapp.databinding.ActivityMainBinding;
+import com.classic_calendar.app.databinding.ActivityMainBinding;
 
 import java.time.format.DateTimeFormatter;
 

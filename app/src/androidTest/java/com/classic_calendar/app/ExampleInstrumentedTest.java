@@ -1,4 +1,4 @@
-package com.example.timetableapp;
+package com.classic_calendar.app;
 
 import android.content.Context;
 
