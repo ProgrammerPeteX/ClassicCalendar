@@ -27,7 +27,12 @@
             android:id="@+id/previous_Button"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:text="previous"
+            android:background="@drawable/week_arrow_button"
+            android:scaleX="-0.7"
+            android:scaleY="0.7
+"
+            android:textDirection="ltr"
+            android:textSize="12sp"
             app:layout_constraintBottom_toTopOf="@+id/task_LinearLayout"
             app:layout_constraintEnd_toStartOf="@+id/currentDate_TextView"
             app:layout_constraintStart_toStartOf="parent"
@@ -35,6 +40,7 @@
 
         <TextView
             android:id="@+id/currentDate_TextView"
+            android:text="00.00.00\nMONDAY"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:gravity="center"
@@ -49,7 +55,10 @@
             android:id="@+id/next_Button"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:text="next"
+            android:background="@drawable/week_arrow_button"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:textSize="12sp"
             app:layout_constraintBottom_toTopOf="@+id/task_LinearLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/currentDate_TextView"
