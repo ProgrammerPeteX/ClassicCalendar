@@ -51,8 +51,6 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         mainContext = this;
         getPermissions(mainContext,mainActivity);
         setContentView(viewRoot);
-        setTitle("Calendar");
-
 
         TaskInformation taskInformation = new TaskInformation();
         taskInformation.setBinding(overviewBinding);
