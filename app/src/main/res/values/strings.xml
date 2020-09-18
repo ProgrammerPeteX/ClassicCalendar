@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Classic Calendar</string>
+    <string name="add_button">+</string>
+    <string name="date_placeholder">00.00.00\nMONDAY</string>
 </resources>

@@ -43,10 +43,6 @@ public class TaskMemory implements Serializable {
         TASK_LIST = taskList;
     }
 
-    public static void setRECYCLERVIEW_LIST(ArrayList<TaskInformation> recyclerviewList) {
-        RECYCLERVIEW_LIST = recyclerviewList;
-    }
-
     public static void setEarliestDate(LocalDate earliestDate) {
         TaskMemory.earliestDate = earliestDate;
     }
@@ -64,11 +60,6 @@ public class TaskMemory implements Serializable {
     }
 
     //GETTERS
-
-
-    public static String getMemoryFilename() {
-        return MEMORY_FILENAME;
-    }
 
     public static ArrayList<TaskInformation> getTASK_LIST() {
         return TASK_LIST;
@@ -204,7 +195,7 @@ public class TaskMemory implements Serializable {
     }
 
 
-    private static void saveObject(Context context, String FILENAME, Object object) {
+    private static void saveObject(Context context, String FILENAME, ArrayList<ArrayList<TaskInformation>> object) {
         File dir = context.getFileStreamPath(FILENAME);
         FileOutputStream fileName = null;
         try {

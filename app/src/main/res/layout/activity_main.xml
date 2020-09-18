@@ -40,7 +40,7 @@
 
         <TextView
             android:id="@+id/currentDate_TextView"
-            android:text="00.00.00\nMONDAY"
+            android:text="@string/date_placeholder"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:gravity="center"
@@ -89,7 +89,7 @@
             android:id="@+id/addTask_Button"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:text="+"
+            android:text="@string/add_button"
             android:textSize="30sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

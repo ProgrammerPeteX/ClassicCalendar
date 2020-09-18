@@ -262,10 +262,6 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
         TaskMemory.save_memoryToFile(mainContext);
     }
-
-    private void deleteTask(TaskInformation oldTaskInformation) {
-
-    }
 }
 
 
