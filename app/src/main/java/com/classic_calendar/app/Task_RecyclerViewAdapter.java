@@ -75,4 +75,18 @@ public class Task_RecyclerViewAdapter extends RecyclerView.Adapter<Task_Recycler
     public void setOnItemClickListener(OnItemClickListener listener) {
         onItemClickListener = listener;
     }
+
+    //UPDATE
+    public static void updateRecyclerViewAdapter(Task_RecyclerViewAdapter task_RecyclerViewAdapter, List<TaskInformation> taskInformation_List) {
+        TaskMemory.getRECYCLERVIEW_LIST().clear();
+        task_RecyclerViewAdapter.notifyDataSetChanged();
+        TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
+        task_RecyclerViewAdapter.notifyItemRangeInserted(0, TaskMemory.getRECYCLERVIEW_LIST().size());
+    }
+
+    public static void updateRecyclerViewItem(Task_RecyclerViewAdapter task_RecyclerViewAdapter, List<TaskInformation> taskInformation_List, int itemNumber) {
+        TaskMemory.getRECYCLERVIEW_LIST().clear();
+        TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
+        task_RecyclerViewAdapter.notifyItemChanged(itemNumber);
+    }
 }

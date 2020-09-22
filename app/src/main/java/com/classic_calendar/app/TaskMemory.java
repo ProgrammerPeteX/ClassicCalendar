@@ -39,35 +39,27 @@ public class TaskMemory implements Serializable {
     }
 
     //SETTERS
-    public static void setTASK_LIST(ArrayList<TaskInformation> taskList) {
-        TASK_LIST = taskList;
-    }
-
     public static void setEarliestDate(LocalDate earliestDate) {
         TaskMemory.earliestDate = earliestDate;
-    }
-
-    public static void setLatestDate(LocalDate latestDate) {
-        TaskMemory.latestDate = latestDate;
-    }
-
-    public static void setMEMORY(ArrayList<ArrayList<TaskInformation>> MEMORY) {
-        TaskMemory.MEMORY = MEMORY;
     }
 
     public static void setBINDING(ActivityMainBinding BINDING) {
         TaskMemory.BINDING = BINDING;
     }
 
+    public static void setLatestDate(LocalDate latestDate) {
+        TaskMemory.latestDate = latestDate;
+    }
+
+    public static void setTASK_LIST(ArrayList<TaskInformation> taskList) {
+        TASK_LIST = taskList;
+    }
+
+    public static void setMEMORY(ArrayList<ArrayList<TaskInformation>> MEMORY) {
+        TaskMemory.MEMORY = MEMORY;
+    }
+
     //GETTERS
-
-    public static ArrayList<TaskInformation> getTASK_LIST() {
-        return TASK_LIST;
-    }
-
-    public static ArrayList<TaskInformation> getRECYCLERVIEW_LIST() {
-        return RECYCLERVIEW_LIST;
-    }
 
     public static LocalDate getEarliestDate() {
         return earliestDate;
@@ -77,28 +69,22 @@ public class TaskMemory implements Serializable {
         return latestDate;
     }
 
+    public static ArrayList<TaskInformation> getTASK_LIST() {
+        return TASK_LIST;
+    }
+
+    public static ArrayList<TaskInformation> getRECYCLERVIEW_LIST() {
+        return RECYCLERVIEW_LIST;
+    }
+
     public static ArrayList<ArrayList<TaskInformation>> getMEMORY() {
         return MEMORY;
     }
 
     //STATIC METHODS
-    public static int getDateDifference(LocalDate newDate, LocalDate oldDate) {
-        return newDate.compareTo(oldDate);
-    }
-
     public static int getMEMORY_INDEX(LocalDate date) {
         return getDateDifference(date, getEarliestDate());
     }
-
-    public static void setDisplayDate(LocalDate displayDate) {
-        //CHANGE TEXT
-        setDateDisplay(displayDate, 0);
-        setEarliestDate(displayDate);
-        setLatestDate(displayDate);
-        MEMORY.add(TASK_LIST);
-        // LOAD DAY-RECYCLERVIEW
-    }
-
     public static LocalDate changeDisplayDate(LocalDate currentDisplayDate, int addDay) {
         //CHANGE TEXT
         LocalDate newDate = setDateDisplay(currentDisplayDate, addDay);
@@ -108,23 +94,8 @@ public class TaskMemory implements Serializable {
         return newDate;
     }
 
-    public static LocalDate setDateDisplay(LocalDate displayDate, int addDay) {
-        displayDate = displayDate.plusDays(addDay);
-        String displayDateText = displayDate.getDayOfWeek() + "\n" + dateToString(displayDate);
-        BINDING.currentDateTextView.setText(displayDateText);
-        return displayDate;
-    }
-
-    public static String dateToString(LocalDate date) {
-        return date.format(Constants.FORMATTER);
-    }
-
-    public static LocalDate stringToDate(String dateText) {
-        return LocalDate.parse(dateText, Constants.FORMATTER);
-    }
-
     public static void add_dateOutOfBounds(LocalDate newDate) {
-        int newDayPos = newDate.compareTo(getEarliestDate());
+        int newDayPos = getMEMORY_INDEX(newDate);
         boolean positiveOutOfBounds = getDateDifference(newDate, getLatestDate()) > 0;
         boolean negativeOutOfBounds = getDateDifference(newDate, getEarliestDate()) < 0;
         if (positiveOutOfBounds) {
@@ -144,37 +115,33 @@ public class TaskMemory implements Serializable {
         }
     }
 
+    private static int getDateDifference(LocalDate newDate, LocalDate oldDate) {
+        return newDate.compareTo(oldDate);
+    }
+
+    public static void setup_displayDate(LocalDate displayDate) {
+        //CHANGE TEXT
+        setDateDisplay(displayDate, 0);
+        setEarliestDate(displayDate);
+        setLatestDate(displayDate);
+        MEMORY.add(TASK_LIST);
+        // LOAD DAY-RECYCLERVIEW
+    }
+
+    public static LocalDate setDateDisplay(LocalDate displayDate, int addDay) {
+        displayDate = displayDate.plusDays(addDay);
+        String displayDateText = displayDate.getDayOfWeek() + "\n" + dateToString(displayDate);
+        BINDING.currentDateTextView.setText(displayDateText);
+        return displayDate;
+    }
+
+
     public static void add_taskToMemory(TaskInformation newTaskInformation) {
         int datePos = getMEMORY_INDEX(newTaskInformation.getDate());
         setTASK_LIST(MEMORY.get(datePos));
         TASK_LIST.add(newTaskInformation);
         setTASK_LIST(sort_taskList(TASK_LIST));
 
-    }
-
-    public static ArrayList<TaskInformation> sort_taskList(ArrayList<TaskInformation> taskList) {
-        //SORT LIST
-        Comparator<TaskInformation> taskInformation_sortByStartTime_Comparator = new Comparator<TaskInformation>() {
-            @Override
-            public int compare(TaskInformation o1, TaskInformation o2) {
-                return Integer.compare(timeString_toInt(o1.getStartTime()), timeString_toInt(o2.getStartTime()));
-            }
-
-            private int timeString_toInt(String input) {
-                String militaryTime = String.format("%s%s", input.substring(0, 2), input.substring(3, 5));
-                return Integer.parseInt(militaryTime);
-            }
-        };
-        Collections.sort(taskList, taskInformation_sortByStartTime_Comparator);
-        return taskList;
-    }
-
-    public static void delete_taskFromMemory(TaskInformation oldTaskInformation) {
-        if (oldTaskInformation != null) {
-            LocalDate oldDate = oldTaskInformation.getDate();
-            int oldDayPos = getMEMORY_INDEX(oldDate);
-            MEMORY.get(oldDayPos).remove(oldTaskInformation);
-        }
     }
 
     public static void save_memoryToFile(Context context) {
@@ -192,6 +159,14 @@ public class TaskMemory implements Serializable {
         LocalDate latestDate = stringToDate(loadText(context, LATEST_DATE_FILENAME));
         setLatestDate(latestDate);
 
+    }
+
+    public static void delete_taskFromMemory(TaskInformation oldTaskInformation) {
+        if (oldTaskInformation != null) {
+            LocalDate oldDate = oldTaskInformation.getDate();
+            int oldDayPos = getMEMORY_INDEX(oldDate);
+            MEMORY.get(oldDayPos).remove(oldTaskInformation);
+        }
     }
 
 
@@ -263,5 +238,31 @@ public class TaskMemory implements Serializable {
             e.printStackTrace();
         }
         return inputString;
+    }
+
+
+    public static String dateToString(LocalDate date) {
+        return date.format(Constants.FORMATTER);
+    }
+
+    public static LocalDate stringToDate(String dateText) {
+        return LocalDate.parse(dateText, Constants.FORMATTER);
+    }
+
+    public static ArrayList<TaskInformation> sort_taskList(ArrayList<TaskInformation> taskList) {
+        //SORT LIST
+        Comparator<TaskInformation> taskInformation_sortByStartTime_Comparator = new Comparator<TaskInformation>() {
+            @Override
+            public int compare(TaskInformation o1, TaskInformation o2) {
+                return Integer.compare(timeString_toInt(o1.getStartTime()), timeString_toInt(o2.getStartTime()));
+            }
+
+            private int timeString_toInt(String input) {
+                String militaryTime = String.format("%s%s", input.substring(0, 2), input.substring(3, 5));
+                return Integer.parseInt(militaryTime);
+            }
+        };
+        Collections.sort(taskList, taskInformation_sortByStartTime_Comparator);
+        return taskList;
     }
 }

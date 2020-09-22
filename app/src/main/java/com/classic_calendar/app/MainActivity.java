@@ -1,6 +1,5 @@
 package com.classic_calendar.app;
 
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,7 +15,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
@@ -28,12 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements Main_Interface {
     public Context mainContext;
@@ -43,9 +36,9 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
     public Task_RecyclerViewAdapter task_RecyclerViewAdapter;
     public int currentTaskPosition;
-
     public LocalDate currentDate;
     public LocalDate displayDate;
+    public Addons addons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         ConstraintLayout viewRoot = binding.getRoot();
         mainActivity = this;
         mainContext = this;
+
         getPermissions(mainContext,mainActivity);
         setContentView(viewRoot);
 
@@ -77,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
             TaskMemory.load_memoryFromFile(mainContext);
         }
         if (TaskMemory.getMEMORY().isEmpty()) {
-            TaskMemory.setDisplayDate(displayDate);
+            TaskMemory.setup_displayDate(displayDate);
         } else {
             int addDay = 0;
             TaskMemory.setDateDisplay(currentDate, addDay);
@@ -85,19 +79,20 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
         currentTaskPosition = TaskMemory.getMEMORY_INDEX(currentDate);
         TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(currentTaskPosition));
-        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
+        Task_RecyclerViewAdapter.updateRecyclerViewAdapter(task_RecyclerViewAdapter, TaskMemory.getTASK_LIST());
 
         //SET BUTTONS
         set_PreviousButton_OnClickListener();
         set_NextButton_OnClickListener();
         add_taskListener();
-        delete_task();
         edit_task();
+        delete_task();
 
 
         //ADDONS
-        run_timeColourCoding_Addon();
-
+        addons = new Addons(mainActivity, task_RecyclerViewAdapter);
+        addons.addAllAddons();
+        addons.onCreateMain_addons();
     }
 
     public void getPermissions(Context mainContext, Activity mainActivity) {
@@ -110,29 +105,6 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         }
     }
 
-    public void set_PreviousButton_OnClickListener() {
-        // PREVIOUS DATE
-        binding.previousButton.setOnClickListener(v -> {
-            int subtractDay = -1;
-            updateDate(subtractDay);
-        });
-    }
-
-    public void set_NextButton_OnClickListener() {
-        // NEXT DATE
-        binding.nextButton.setOnClickListener(v -> {
-            int addDay = 1;
-            updateDate(addDay);
-        });
-    }
-
-    public void updateDate(int addDay) {
-        displayDate = TaskMemory.changeDisplayDate(displayDate, addDay);
-        int MEMORY_index = TaskMemory.getMEMORY_INDEX(displayDate);
-        TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(MEMORY_index));
-        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
-    }
-
     @Override
     public void create_taskGui() {
         TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
@@ -141,7 +113,42 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         binding.taskRecyclerView.setLayoutManager(new LinearLayoutManager(mainContext));
     }
 
+    @Override
+    public void set_taskGuiPosition(ArrayList<TaskInformation> taskInformation_List) {
+        //SORT LIST
+        taskInformation_List = TaskMemory.sort_taskList(taskInformation_List);
+        //UPDATE LIST
+        Task_RecyclerViewAdapter.updateRecyclerViewAdapter(task_RecyclerViewAdapter,taskInformation_List);
+    }
 
+    public void set_PreviousButton_OnClickListener() {
+        // PREVIOUS DATE
+        binding.previousButton.setOnClickListener(v -> {
+            int subtractDay = -1;
+            updateDate(subtractDay);
+            //ADDONS
+            addons.onPrevious_addons();
+        });
+    }
+
+    public void set_NextButton_OnClickListener() {
+        // NEXT DATE
+        binding.nextButton.setOnClickListener(v -> {
+            int addDay = 1;
+            updateDate(addDay);
+            //ADDONS
+            addons.onNext_addons();
+        });
+    }
+
+    public void updateDate(int addDay) {
+        displayDate = TaskMemory.changeDisplayDate(displayDate, addDay);
+        int MEMORY_index = TaskMemory.getMEMORY_INDEX(displayDate);
+        TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(MEMORY_index));
+        Task_RecyclerViewAdapter.updateRecyclerViewAdapter(task_RecyclerViewAdapter, TaskMemory.getTASK_LIST());
+    }
+
+    //ADD TASK
     @Override
     public void add_taskListener() {
         binding.addTaskButton.setOnClickListener(new View.OnClickListener() {
@@ -162,23 +169,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         });
     }
 
-    @Override
-    public void set_taskGuiPosition(ArrayList<TaskInformation> taskInformation_List) {
-        //SORT LIST
-        taskInformation_List = TaskMemory.sort_taskList(taskInformation_List);
-        //UPDATE LIST
-        updateRecyclerViewAdapter(taskInformation_List);
-    }
-
-    public void updateRecyclerViewAdapter(List<TaskInformation> taskInformation_List) {
-        TaskMemory.getRECYCLERVIEW_LIST().clear();
-        task_RecyclerViewAdapter.notifyDataSetChanged();
-        TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
-        task_RecyclerViewAdapter.notifyItemRangeInserted(0, TaskMemory.getRECYCLERVIEW_LIST().size());
-    }
-
     //EDIT TASK
-
     @Override
     public void edit_task() {
         task_RecyclerViewAdapter.setOnItemClickListener(new Task_RecyclerViewAdapter.OnItemClickListener() {
@@ -199,6 +190,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         });
     }
 
+    //DELETE TASK
     @Override
     public void delete_task() {
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
@@ -217,14 +209,14 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
                 task_RecyclerViewAdapter.notifyItemRangeInserted(positionStart, TaskMemory.getRECYCLERVIEW_LIST().size());
                 TaskMemory.save_memoryToFile(mainContext);
-                onDeleteTask();
+                //ADDONS
+                addons.onDeleteTask_addons();
             }
         };
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.taskRecyclerView);
     }
 
-    //OVERVIEW --> ON ACTIVITY RESULT
-
+    //ON ACTIVITY RESULT <-- INFO FROM OVERVIEW
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -235,7 +227,8 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                     TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
                     assert newTaskInformation != null;
                     updateTask(newTaskInformation, null);
-                    onAddTask();
+                    //ADDONS
+                    addons.onAddTask_addons();
                 }
                 break;
             }
@@ -255,7 +248,8 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                             updateTask(newTaskInformation, oldTaskInformation);
                         }
                     }
-                    onEditTask();
+                    //ADDONS
+                    addons.onEditTask_addons();
                 }
                 break;
             }
@@ -267,63 +261,9 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         TaskMemory.add_taskToMemory(newTaskInformation);
         TaskMemory.delete_taskFromMemory(oldTaskInformation);
         displayDate = TaskMemory.changeDisplayDate(newTaskInformation.getDate(), 0);
-        updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
+        Task_RecyclerViewAdapter.updateRecyclerViewAdapter(task_RecyclerViewAdapter, TaskMemory.getTASK_LIST());
         TaskMemory.save_memoryToFile(mainContext);
     }
-
-    // ADDON TESTING SPACE
-
-    final Runnable set_timeColourCoding_addon_runnable = new Runnable() {
-        @Override
-        public void run() {
-            for (int i = 0; i < TaskMemory.getTASK_LIST().size(); i ++) {
-                TaskInformation task = TaskMemory.getTASK_LIST().get(i);
-                if (task_RecyclerViewAdapter.getItemCount() != 0) {
-                    LocalDateTime currentTime = LocalDateTime.now();
-                    LocalDateTime taskStartTime = task.getDate().atTime(LocalTime.parse(task.getStartTime()));
-                    LocalDateTime taskEndTime = task.getDate().atTime(LocalTime.parse(task.getEndTime()));
-
-                    if (currentTime.isAfter(taskEndTime)) { // PAST TASKS
-                        task.setTimeColourCoding(Color.valueOf((float) 0.2,(float) 0.3,(float) 0.99,(float) 0.10).toArgb());
-                    } else if (currentTime.isBefore(taskStartTime)) { // FUTURE TASKS
-                        task.setTimeColourCoding(Color.valueOf((float) 0.2,(float) 0.3,(float) 0.99,(float) 0.30).toArgb());
-                    } else { // CURRENT TASKS
-                        task.setTimeColourCoding(Color.valueOf((float) 0.2,(float) 0.3,(float) 0.99,(float) 0.20).toArgb());
-                    }
-                    updateRecyclerViewItem(TaskMemory.getTASK_LIST(),i);
-                }
-            }
-        }
-    };
-    public void run_timeColourCoding_Addon() {
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                mainActivity.runOnUiThread(set_timeColourCoding_addon_runnable);
-            }
-        };
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(timerTask,0,1000*60);
-    }
-
-    public void updateRecyclerViewItem(List<TaskInformation> taskInformation_List, int itemNumber) {
-        TaskMemory.getRECYCLERVIEW_LIST().clear();
-        TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
-        task_RecyclerViewAdapter.notifyItemChanged(itemNumber);
-    }
-
-    public void onAddTask() {
-        mainActivity.runOnUiThread(set_timeColourCoding_addon_runnable);
-    }
-
-    public void onEditTask() {
-        mainActivity.runOnUiThread(set_timeColourCoding_addon_runnable);
-    }
-
-    public void onDeleteTask() {
-
-    }
-
 }
 
 
