@@ -1,5 +1,6 @@
 package com.classic_calendar.app;
 
+import android.graphics.Color;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -7,6 +8,7 @@ import com.classic_calendar.app.databinding.ActivityOverviewBinding;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 
 public class TaskInformation implements TaskInformation_interface, Parcelable, Serializable {
@@ -22,6 +24,7 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
     private String details = "";
 
     private LocalDate date;
+    private int timeColourCoding = 0;
 
 
     public TaskInformation() {
@@ -45,6 +48,11 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
     }
 
     //SETTERS
+
+    public void setTimeColourCoding(int timeColourCoding) {
+        this.timeColourCoding = timeColourCoding;
+    }
+
     public void setDate(LocalDate date) {
         this.date = date;
     }
@@ -78,6 +86,11 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
     }
 
     //GETTERS
+
+    public int getTimeColourCoding() {
+        return timeColourCoding;
+    }
+
     public LocalDate getDate() {
         this.date = LocalDate.parse(dateText, Constants.FORMATTER);
         return date;

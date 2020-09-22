@@ -1,5 +1,6 @@
 package com.classic_calendar.app;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
@@ -26,8 +28,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements Main_Interface {
     public Context mainContext;
@@ -90,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
 
 
         //ADDONS
+        run_timeColourCoding_Addon();
 
     }
 
@@ -210,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 TaskMemory.getRECYCLERVIEW_LIST().addAll(TaskMemory.getTASK_LIST());
                 task_RecyclerViewAdapter.notifyItemRangeInserted(positionStart, TaskMemory.getRECYCLERVIEW_LIST().size());
                 TaskMemory.save_memoryToFile(mainContext);
+                onDeleteTask();
             }
         };
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.taskRecyclerView);
@@ -227,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                     TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
                     assert newTaskInformation != null;
                     updateTask(newTaskInformation, null);
+                    onAddTask();
                 }
                 break;
             }
@@ -246,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                             updateTask(newTaskInformation, oldTaskInformation);
                         }
                     }
+                    onEditTask();
                 }
                 break;
             }
@@ -260,6 +270,60 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         updateRecyclerViewAdapter(TaskMemory.getTASK_LIST());
         TaskMemory.save_memoryToFile(mainContext);
     }
+
+    // ADDON TESTING SPACE
+
+    final Runnable set_timeColourCoding_addon_runnable = new Runnable() {
+        @Override
+        public void run() {
+            for (int i = 0; i < TaskMemory.getTASK_LIST().size(); i ++) {
+                TaskInformation task = TaskMemory.getTASK_LIST().get(i);
+                if (task_RecyclerViewAdapter.getItemCount() != 0) {
+                    LocalDateTime currentTime = LocalDateTime.now();
+                    LocalDateTime taskStartTime = task.getDate().atTime(LocalTime.parse(task.getStartTime()));
+                    LocalDateTime taskEndTime = task.getDate().atTime(LocalTime.parse(task.getEndTime()));
+
+                    if (currentTime.isAfter(taskEndTime)) { // PAST TASKS
+                        task.setTimeColourCoding(Color.valueOf((float) 0.2,(float) 0.3,(float) 0.99,(float) 0.10).toArgb());
+                    } else if (currentTime.isBefore(taskStartTime)) { // FUTURE TASKS
+                        task.setTimeColourCoding(Color.valueOf((float) 0.2,(float) 0.3,(float) 0.99,(float) 0.30).toArgb());
+                    } else { // CURRENT TASKS
+                        task.setTimeColourCoding(Color.valueOf((float) 0.2,(float) 0.3,(float) 0.99,(float) 0.20).toArgb());
+                    }
+                    updateRecyclerViewItem(TaskMemory.getTASK_LIST(),i);
+                }
+            }
+        }
+    };
+    public void run_timeColourCoding_Addon() {
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                mainActivity.runOnUiThread(set_timeColourCoding_addon_runnable);
+            }
+        };
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(timerTask,0,1000*60);
+    }
+
+    public void updateRecyclerViewItem(List<TaskInformation> taskInformation_List, int itemNumber) {
+        TaskMemory.getRECYCLERVIEW_LIST().clear();
+        TaskMemory.getRECYCLERVIEW_LIST().addAll(taskInformation_List);
+        task_RecyclerViewAdapter.notifyItemChanged(itemNumber);
+    }
+
+    public void onAddTask() {
+        mainActivity.runOnUiThread(set_timeColourCoding_addon_runnable);
+    }
+
+    public void onEditTask() {
+        mainActivity.runOnUiThread(set_timeColourCoding_addon_runnable);
+    }
+
+    public void onDeleteTask() {
+
+    }
+
 }
 
 
