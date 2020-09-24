@@ -85,6 +85,7 @@ public class TaskMemory implements Serializable {
     public static int getMEMORY_INDEX(LocalDate date) {
         return getDateDifference(date, getEarliestDate());
     }
+
     public static LocalDate changeDisplayDate(LocalDate currentDisplayDate, int addDay) {
         //CHANGE TEXT
         LocalDate newDate = setDateDisplay(currentDisplayDate, addDay);
@@ -242,11 +243,11 @@ public class TaskMemory implements Serializable {
 
 
     public static String dateToString(LocalDate date) {
-        return date.format(Constants.FORMATTER);
+        return date.format(Constants.DMY_FORMATTER);
     }
 
     public static LocalDate stringToDate(String dateText) {
-        return LocalDate.parse(dateText, Constants.FORMATTER);
+        return LocalDate.parse(dateText, Constants.DMY_FORMATTER);
     }
 
     public static ArrayList<TaskInformation> sort_taskList(ArrayList<TaskInformation> taskList) {

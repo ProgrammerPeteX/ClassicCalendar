@@ -1,6 +1,5 @@
 package com.classic_calendar.app;
 
-import android.graphics.Color;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -8,7 +7,6 @@ import com.classic_calendar.app.databinding.ActivityOverviewBinding;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Comparator;
 
 public class TaskInformation implements TaskInformation_interface, Parcelable, Serializable {
@@ -92,7 +90,7 @@ public class TaskInformation implements TaskInformation_interface, Parcelable, S
     }
 
     public LocalDate getDate() {
-        this.date = LocalDate.parse(dateText, Constants.FORMATTER);
+        this.date = LocalDate.parse(dateText, Constants.DMY_FORMATTER);
         return date;
     }
 

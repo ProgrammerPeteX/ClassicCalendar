@@ -78,7 +78,14 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
         }
 
         currentTaskPosition = TaskMemory.getMEMORY_INDEX(currentDate);
-        TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(currentTaskPosition));
+
+        try {
+            TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(currentTaskPosition));
+        } catch (Exception e) {
+            TaskMemory.add_dateOutOfBounds(currentDate);
+            TaskMemory.setTASK_LIST(TaskMemory.getMEMORY().get(currentTaskPosition));
+            e.printStackTrace();
+        }
         Task_RecyclerViewAdapter.updateRecyclerViewAdapter(task_RecyclerViewAdapter, TaskMemory.getTASK_LIST());
 
         //SET BUTTONS
@@ -161,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 Intent intent = new Intent(mainContext, OverviewActivity.class);
                 intent.putExtra(Constants.ADD_OR_EDIT_KEY, Constants.ADD);
                 TaskInformation taskInformation = new TaskInformation();
-                taskInformation.setDateText(displayDate.format(Constants.FORMATTER));
+                taskInformation.setDateText(displayDate.format(Constants.DMY_FORMATTER));
                 intent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
                 startActivityForResult(intent, request_Code);
             }
@@ -178,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                 //RETRIEVE INFO FROM ITEM CLICK AND THEN EDIT TASK
                 currentTaskPosition = position;
                 open_activity_overview(Constants.EDIT_REQUEST_CODE);
+                addons.onClickTask();
             }
 
             public void open_activity_overview(int request_Code) {
@@ -228,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                     assert newTaskInformation != null;
                     updateTask(newTaskInformation, null);
                     //ADDONS
+                    Addons.AddonsInfo.setNewTaskInfo(newTaskInformation);
                     addons.onAddTask_addons();
                 }
                 break;
@@ -252,6 +261,11 @@ public class MainActivity extends AppCompatActivity implements Main_Interface {
                     addons.onEditTask_addons();
                 }
                 break;
+            }
+            case Constants.CANCEL_REQUEST_CODE: {
+                //setContentView(R.layout.activity_main);
+                //TaskInformation newTaskInformation = data.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
+                //TaskMemory.setDateDisplay(newTaskInformation.getDate(),0);
             }
         }
     }

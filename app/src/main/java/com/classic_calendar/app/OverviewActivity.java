@@ -142,8 +142,13 @@ public class OverviewActivity extends AppCompatActivity implements Overview_Inte
     @Override
     public void cancel_listener() {
         overviewBinding.cancelButton.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
+                //TaskInformation taskInformation = intent.getParcelableExtra(Constants.OVERVIEW_INFO_KEY);
+                //Intent resultIntent = new Intent();
+                //resultIntent.putExtra(Constants.OVERVIEW_INFO_KEY, (Parcelable) taskInformation);
+                //setResult(Constants.CANCEL_REQUEST_CODE, resultIntent);
                 finish();
             }
         });

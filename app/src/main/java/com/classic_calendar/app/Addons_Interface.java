@@ -1,5 +1,7 @@
 package com.classic_calendar.app;
 
+import android.view.View;
+
 public interface Addons_Interface {
     void onCreateMain();
     void onAddTask();
@@ -7,4 +9,5 @@ public interface Addons_Interface {
     void onDeleteTask();
     void onNext();
     void onPrevious();
+    void onClickTask();
 }

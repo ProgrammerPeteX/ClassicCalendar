@@ -18,7 +18,7 @@ public class TimeColourCoding_Addon implements Addons_Interface{
         this.task_RecyclerViewAdapter = task_RecyclerViewAdapter;
     }
 
-    private final Runnable set_timeColourCoding_addon_runnable = new Runnable() {
+    private final Runnable setRunnable = new Runnable() {
         @Override
         public void run() {
             for (int i = 0; i < TaskMemory.getTASK_LIST().size(); i ++) {
@@ -42,7 +42,7 @@ public class TimeColourCoding_Addon implements Addons_Interface{
     };
 
     public void runOnce() {
-        activity.runOnUiThread(set_timeColourCoding_addon_runnable);
+        activity.runOnUiThread(setRunnable);
     }
     public void runTimer() {
         TimerTask timerTask = new TimerTask() {
@@ -82,6 +82,11 @@ public class TimeColourCoding_Addon implements Addons_Interface{
 
     @Override
     public void onPrevious() {
+
+    }
+
+    @Override
+    public void onClickTask() {
 
     }
 }
